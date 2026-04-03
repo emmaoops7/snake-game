@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGameService } from './GameService';
 
 const GameHeader = () => {
-  const { user, signIn, signOut, isOnline } = useGameService();
+  const { user, signOut, isOnline, setShowLogin, setShowRegister } = useGameService();
 
   return (
     <nav className="bg-gradient-to-r from-snake-green to-emerald-600 text-white shadow-lg">
@@ -17,22 +17,20 @@ const GameHeader = () => {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <div className={`w-3 h-3 rounded-full ${isOnline ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}></div>
-              <span className="text-sm">
-                {isOnline ? '在线模式' : '离线模式'}
-              </span>
+              <span className="text-sm">{isOnline ? '在线模式' : '离线模式'}</span>
             </div>
-            
+
             {user ? (
               <div className="flex items-center space-x-3">
                 <div className="text-sm">
-                  <div className="font-medium">{user.email || '玩家'}</div>
+                  <div className="font-medium">{user.email?.split('@')[0] || '玩家'}</div>
                   <div className="text-xs opacity-80">已登录</div>
                 </div>
-                <button 
+                <button
                   onClick={signOut}
                   className="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition"
                 >
@@ -41,10 +39,16 @@ const GameHeader = () => {
               </div>
             ) : (
               <div className="flex items-center space-x-2">
-                <button className="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition">
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition cursor-pointer"
+                >
                   登录
                 </button>
-                <button className="px-4 py-2 bg-white text-snake-green font-semibold rounded-lg hover:bg-gray-100 transition">
+                <button
+                  onClick={() => setShowRegister(true)}
+                  className="px-4 py-2 bg-white text-snake-green font-semibold rounded-lg hover:bg-gray-100 transition cursor-pointer"
+                >
                   注册
                 </button>
               </div>
