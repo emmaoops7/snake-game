@@ -1,29 +1,54 @@
 import { createClient } from '@supabase/supabase-js';
+import { localStorageService, mockAuthService } from './localStorageService';
 
-// 🔧 如何获取你的 Supabase 凭证：
-// 1. 访问 https://supabase.com 并注册/登录
-// 2. 创建一个新项目
-// 3. 进入项目设置 → API
-// 4. 复制以下两个值：
-//    - Project URL (格式: https://xxxxxxxxxxxx.supabase.co)
-//    - anon/public key (以 'eyJ' 开头的长字符串)
+// 从环境变量读取配置
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// ⚠️ 重要：使用环境变量保护你的密钥（生产环境）
-// 在 .env.local 文件中添加：
-// VITE_SUPABASE_URL=你的URL
-// VITE_SUPABASE_ANON_KEY=你的Key
+let supabase = null;
+let isSupabaseConnected = false;
 
-// 从环境变量读取或使用默认值（开发用）
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL_HERE';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY_HERE';
+// 测试 Supabase 连接
+async function testSupabaseConnection() {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.log('⚠️ Supabase 配置缺失，使用本地存储模式');
+    return false;
+  }
 
-// 创建 Supabase 客户端
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-});
+  try {
+    // 创建客户端
+    supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    });
+
+    // 测试连接
+    const { error } = await supabase.auth.getSession();
+    if (error) {
+      console.log('❌ Supabase 连接失败:', error.message);
+      console.log('切换到本地存储模式');
+      return false;
+    }
+
+    console.log('✅ Supabase 连接成功！');
+    isSupabaseConnected = true;
+    return true;
+  } catch (error) {
+    console.log('❌ Supabase 连接异常:', error.message);
+    console.log('切换到本地存储模式');
+    return false;
+  }
+}
+
+// 初始化连接测试
+(async () => {
+  await testSupabaseConnection();
+})();
+
+// 导出 Supabase 客户端（如果连接失败则为 null）
+export { supabase, isSupabaseConnected };
 
 // 🎮 贪吃蛇游戏数据库表结构（需要先在 Supabase 中创建）：
 /*

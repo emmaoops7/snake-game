@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useGameService } from './GameService';
 
 const GRID_SIZE = 20;
 const CELL_SIZE = 20;
@@ -11,6 +12,7 @@ const SnakeGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
+  const { submitScore, getHighScore } = useGameService();
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(INITIAL_SPEED);
 
@@ -39,6 +41,7 @@ const SnakeGame = () => {
     setScore(0);
     setIsPlaying(true);
     setSpeed(INITIAL_SPEED);
+    setGameStartTime(Date.now());
   }, [generateFood]);
 
   // 游戏逻辑
@@ -62,17 +65,13 @@ const SnakeGame = () => {
         head.x < 0 || head.x >= GRID_SIZE ||
         head.y < 0 || head.y >= GRID_SIZE
       ) {
-        setGameOver(true);
-        setIsPlaying(false);
-        if (score > highScore) setHighScore(score);
+        handleGameOver();
         return prevSnake;
       }
 
       // 检查撞到自己
       if (prevSnake.some(segment => segment.x === head.x && segment.y === head.y)) {
-        setGameOver(true);
-        setIsPlaying(false);
-        if (score > highScore) setHighScore(score);
+        handleGameOver();
         return prevSnake;
       }
 
@@ -140,19 +139,28 @@ const SnakeGame = () => {
 
   // 初始化
   useEffect(() => {
-    const savedHighScore = localStorage.getItem('snakeHighScore');
-    if (savedHighScore) {
-      setHighScore(parseInt(savedHighScore));
-    }
-  }, []);
+    const savedHighScore = getHighScore();
+    setHighScore(savedHighScore);
+  }, [getHighScore]);
 
-  // 保存最高分
-  useEffect(() => {
+  // 游戏结束处理
+  const handleGameOver = useCallback(async () => {
+    setGameOver(true);
+    setIsPlaying(false);
+    
     if (score > highScore) {
       setHighScore(score);
-      localStorage.setItem('snakeHighScore', score.toString());
     }
-  }, [score, highScore]);
+    
+    // 提交分数
+    if (score > 0) {
+      const gameDuration = Math.floor((Date.now() - gameStartTime) / 1000);
+      await submitScore(score, Math.floor(score / 100) + 1, gameDuration);
+    }
+  }, [score, highScore, submitScore]);
+
+  // 游戏状态变量
+  const [gameStartTime, setGameStartTime] = useState(0);
 
   return (
     <div className="flex flex-col items-center p-6">
