@@ -1,17 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
-import { localStorageService, mockAuthService } from './localStorageService';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Supabase 配置（anon key 是公开的，可以直接写在前端代码中）
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ptgsdbyhvtipskjvfyjh.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_8gngfjSIVnYPGk_O65qXkQ_xA9NMvVR';
 
-// 无论 Supabase 是否配置，都创建客户端（可能为 null）
-const supabase = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: { persistSession: true, autoRefreshToken: true },
-    })
-  : null;
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+});
 
-// 是否配置了 Supabase（非空即算配置，实际连接在使用时验证）
-const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
+const isSupabaseConfigured = true;
 
 export { supabase, isSupabaseConfigured };
